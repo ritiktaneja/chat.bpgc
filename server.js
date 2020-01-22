@@ -20,7 +20,7 @@ messagesArray=[{
     'message':''
 }];
 
-server.listen(process.env.PORT || 8001);
+server.listen(process.env.PORT || 80);
 
 console.log('Server running...');
 app.get('/',function(req,res){
