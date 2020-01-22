@@ -101,29 +101,25 @@ font-family: 'Roboto';
     }
     
 
-@media (max-width: 1000px) {
+@media (max-width: 768px) {
   
 
-    body{
+    /* body{
        
- 
-    background-color: khaki;
-    background:url('img/background2.jpg') no-repeat;
-    background-size: cover;
-   
-   
-    
+        background-color: red;
 
     }
     #chatBox
     {
    
     overflow:scroll;
-     position: absolute;
-     
-     height: 100% !important;
+     position: relative ;
+    
+     height: 100px !important;
 
-     top:20% !important;
+     top:50% !important;
+     width:100%;
+     
     
    
     }
@@ -133,8 +129,7 @@ font-family: 'Roboto';
     position: absolute;
     overflow:scroll;
     height: 50% !important;
-  
-    margin-bottom: 10%;
+     margin-bottom: 10%;
    
    
 }
@@ -143,6 +138,25 @@ font-family: 'Roboto';
    position: relative;
  
    bottom:0;
+} */
+
+#user-list
+{
+    height: 50% !important  ;
+    position: relative;
+    margin-bottom: 25px;
+}
+
+#registerBox
+{
+    position: relative;
+        top:10%;
+    
+}
+
+#chatBox
+{
+    padding-top: 10px;
 }
   
 }
@@ -153,9 +167,9 @@ font-family: 'Roboto';
     <body class="container-fluid">
 
         <div class="app container-fluid" id="app">
-            <div v-if="!logged" id="registerBox" class=" row container-fluid p-5 col-sm-12">
+            <div v-if="!logged" id="registerBox" class="row align-items-center container-fluid p-5">
                
-               <div id="registrationBoxInner" class="col-md-4  rounded p-2 text-center col-sm-12 offset-md-4 ">
+               <div id="registrationBoxInner" class="col-md-4  mx-auto rounded p-2 text-center ">
                   <form  @submit="checkUsername" @submit.prevent>
                        <div class="form-group container">
                            
@@ -172,7 +186,7 @@ font-family: 'Roboto';
             </div>
 
             <div v-if="logged" class="row mt-5">
-                <div id="user-list" class="h-100 overflow-auto col-md-3   rounded ">
+                <div id="user-list" class="h-100 overflow-auto col-md-3 rounded ">
                     <h3 class="h3 mt-1 pt-2 text-light " style="font-family: 'Montserrat';"> Online Users</h3>
                     <hr>
                     <ul>
@@ -187,7 +201,7 @@ font-family: 'Roboto';
                 </div>
                 <div class="col-md-1 "></div>
 
-                <div class="col-md-5 p-0 container-fluid">
+                <div class="col-md-5 p-0 col-sm-12 container-fluid">
                     
                     <div class="table-light container-fluid py-3 text-dark rounded  mb-5">Welcome {{username}}!</div>
                    
@@ -196,7 +210,7 @@ font-family: 'Roboto';
                     <hr>
                     <div id="chat" class="mb-5 container-fluid rounded chat">
                         <div class="pl-2 " v-for="msg in messagesArray">
-                          <strong>{{msg.sender}}</strong>  {{msg.message}} <br>
+                          <strong  >{{msg.sender}}</strong>  {{msg.message}} <br>
                         </div>
                      
                     </div>
@@ -238,7 +252,7 @@ font-family: 'Roboto';
                 
                     data:
                     {
-                        logged:true,
+                        logged:false,
                         duplicate:false,
                         username:"",
                         message:"",
