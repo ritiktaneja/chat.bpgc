@@ -1,0 +1,20 @@
+{
+  "name": "chat.bpgc",
+  "version": "1.0.0",
+  "description": "Chat App for BPGC",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "devStart": "nodemon server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "*",
+    "socket.io": "^2.3.0",
+    "vue": "^2.6.11"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  }
+}

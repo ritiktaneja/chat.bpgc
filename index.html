@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Chat.BPGC</title>
+
+        <!-- Jquery CDN -->
+        <script
+  src="https://code.jquery.com/jquery-3.4.1.js"
+  integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+  crossorigin="anonymous"></script>
+
+  <!-- Bootstrap CDN -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+  
+  <!-- SOCKETS -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <!-- Vue-->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+
+
+
+<style>
+    @import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
+
+#id
+{
+font-family: 'Roboto';
+}
+
+
+        html,body{
+
+        
+        background: url('img/background.jpg') no-repeat;
+        
+        background-size: cover ;
+        width: 100%;
+        height:100% !important ;
+        
+    }
+        /* #chatBox
+    {
+    
+        position: fixed;
+        height: 40%;
+       
+        margin-left: 10%; 
+    }
+    #sendBox
+    {
+        position:relative;
+        height: 10%;
+        margin-left: 10%;
+    }
+    #chat
+    {
+        overflow: scroll;
+    }
+
+    #user-list
+    {
+        overflow:scroll;
+        position: fixed;
+        height: 40%;
+       
+       
+    }
+    #sendBox
+    {
+       
+    } */
+
+    #chatBox{
+        position: absolute;
+        height: 100% !important;
+        margin-bottom: 10px;
+        
+    }
+    #sendBox
+    {
+        position: relative;
+        height: 50%;
+        top:110%;
+        
+    }
+    #user-list
+    {
+       
+        position: absolute;
+        height:80% !important;
+    }
+
+
+@media (max-width: 1000px) {
+  
+
+    body{
+       
+ 
+    background-color: khaki;
+    background:url('img/background2.jpg') no-repeat;
+    background-size: cover;
+   
+   
+    
+
+    }
+    #chatBox
+    {
+   
+    overflow:scroll;
+     position: absolute;
+     
+     height: 100% !important;
+
+     top:20% !important;
+    
+   
+    }
+
+#user-list
+{
+    position: absolute;
+    overflow:scroll;
+    height: 50% !important;
+  
+    margin-bottom: 10%;
+   
+   
+}
+#sendBox
+{
+   position: relative;
+ 
+   bottom:0;
+}
+  
+}
+</style>
+
+
+</head>
+    <body class="container-fluid">
+
+        <div class="app container-fluid" id="app">
+            <div v-if="!logged" id="registerBox" class=" row container-fluid p-5 col-sm-12">
+               
+               <div class="col-md-4 bg-light rounded p-2 text-center col-sm-12 offset-md-4 ">
+                  <form  @submit="checkUsername" @submit.prevent>
+                       <div class="form-group container">
+                           
+                         <label for="username">Enter your nickname</label> <br>
+                         <input type="textbox" id="usernameID"  v-model="username" class="form-control" required >
+                         <p class="text-danger" v-if="duplicate"> Nick already taken!</p>
+                        </div>
+                        <input type="button"  v-on:click="checkUsername" class="btn btn-danger" value="Submit "/>
+                    </form>
+               </div>
+               <footer class="footer">
+                   
+               </footer>
+            </div>
+
+            <div v-if="logged" class="row mt-5">
+                <div id="user-list" class="h-100 overflow-auto col-md-3 bg-warning  rounded ">
+                    <h3 class="h3 mt-1"> Online Users</h3>
+                    <hr>
+                    <ul>
+                       
+                        <li v-for="user in users" class="p-1 text-success">
+                            {{user.username}}
+                            
+                            <strong class="text-danger" v-if="user.status==0"> OFFLINE</strong>
+                            
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-1 "></div>
+
+                <div class="col-md-5 container-fluid">
+                    <div class="table-light text-danger rounded mb-5">Welcome {{username}}!</div>
+                   <div id="chatBox" class="row  h-100 overflow-auto container-fluid pt-2 bg-light rounded ">
+                   
+                    <hr>
+                    <div id="chat" class=" m-0 mb-5 container-fluid rounded chat">
+                        <div class="pl-2 "  v-for="msg in messagesArray">
+                          <strong>{{msg.sender}}</strong>  {{msg.message}} <br>
+                          
+
+                        </div>
+                     
+                    </div>
+                    
+                    
+
+                     </div>
+                    <div id="sendBox" class="row container-fluid mt-3">
+                    <form @submit="sendMessage" v-on:submit.prevent >
+                        <div class="form-group"> 
+                            <label class="text-light"> Enter Message</label>
+                            <input class="form-control" id="messageID" v-model="message"  required/>
+
+                            
+                            <br>
+                            <input type="button" @click="sendMessage" class="btn btn-primary"  value="Send"/>
+                        </div>
+                    </form>
+                 </div>
+           
+              
+        </div>
+
+         </div>
+
+        </div>
+
+        <script>
+           
+
+             $(function(){
+                     
+                var socket=io.connect();
+                
+                         
+
+                var vm=new Vue({
+                    el: '#app',
+                
+                    data:
+                    {
+                        logged:false,
+                        duplicate:false,
+                        username:"",
+                        message:"",
+                        users:[{
+                            username:"",
+                            status:""
+                        }
+                           
+                        ],
+                        messagesArray:[{
+                            'Sender':'',
+                            'message':''
+                        }]
+                       
+                    },
+                    methods:
+                    {
+                        checkUsername()
+                        {  
+                           
+                            socket.emit('verify',this.username);
+                            
+                        },
+                        addUser()
+                        {
+                            var data={
+                                'username':this.username,
+                                'status':1
+                            }
+                            socket.emit('new user',data);
+                            this.logged=true;
+                            socket.emit('get chat');
+                        },
+                        sendMessage()
+                        {
+                            var data={'message':this.message,'sender':this.username};
+                        
+                            socket.emit('send message',data);
+                            this.message="";  
+                           
+                           
+                        }
+                       
+                        
+                    },
+                    mounted()
+                    {
+                        socket.on('duplicate',(data)=>
+                        {
+                           
+                            this.duplicate=true;
+                            console.log('!!');
+                        }),
+                        socket.on('allowed',(data)=>
+                        {
+                            console.log('Welcome');
+                            this.duplicate=false;
+                            this.addUser();
+                        }),
+                        socket.on('new message',(data)=>{
+                            // var msg={
+                            //     'Sender':data.sender,
+                            //     'message':data.message
+                            //  };
+                          
+                            this.messagesArray=data;
+                            var objDiv = document.getElementById("chatBox");
+                            
+                            objDiv.scrollBy(0,objDiv.scrollHeight);
+                        }),
+
+                        socket.on('get users',(data) =>{
+
+                            $('#messageID').focus();
+                           
+                            this.users=data;
+                            var objDiv = document.getElementById("user-list");
+                            objDiv.scrollTop = objDiv.scrollHeight;
+                           
+                              
+                       });
+
+                       socket.on('user fails',(data) =>{
+                        this.logged=false;
+
+                       });
+
+                     
+                        
+                    }
+               });
+               
+              
+
+                // $messageForm.submit(function(e)
+                // {
+                //     e.preventDefault();
+                //     socket.emit('send message',$message.val());
+                //     $message.val('');
+                // })
+
+              
+
+               
+
+                
+
+            })
+           
+        </script>
+        
+    </body>
+</html>
