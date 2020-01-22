@@ -24,6 +24,7 @@
 
 <style>
     @import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
+    @import url('https://fonts.googleapis.com/css?family=Montserrat&display=swap');
 
 #id
 {
@@ -33,10 +34,11 @@ font-family: 'Roboto';
 
         html,body{
 
-        
-        background: url('img/background.jpg') no-repeat;
-        
-        background-size: cover ;
+            background: #232526;  /* fallback for old browsers */
+            background: -webkit-linear-gradient(to right, #2b3844, #101520);  /* Chrome 10-25, Safari 5.1-6 */
+            background: linear-gradient(to right, #2b3844, #101520); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
+    
         width: 100%;
         height:100% !important ;
         
@@ -91,8 +93,13 @@ font-family: 'Roboto';
        
         position: absolute;
         height:80% !important;
+        background-color: rgba(255, 255, 255, 0.4);
     }
-
+    #registrationBoxInner
+    {
+        background-color: rgba(255, 255, 255, 0.4);
+    }
+    
 
 @media (max-width: 1000px) {
   
@@ -148,15 +155,15 @@ font-family: 'Roboto';
         <div class="app container-fluid" id="app">
             <div v-if="!logged" id="registerBox" class=" row container-fluid p-5 col-sm-12">
                
-               <div class="col-md-4 bg-light rounded p-2 text-center col-sm-12 offset-md-4 ">
+               <div id="registrationBoxInner" class="col-md-4  rounded p-2 text-center col-sm-12 offset-md-4 ">
                   <form  @submit="checkUsername" @submit.prevent>
                        <div class="form-group container">
                            
-                         <label for="username">Enter your nickname</label> <br>
+                         <label for="username" class="text-light">Enter your nickname</label> <br>
                          <input type="textbox" id="usernameID"  v-model="username" class="form-control" required >
                          <p class="text-danger" v-if="duplicate"> Nick already taken!</p>
                         </div>
-                        <input type="button"  v-on:click="checkUsername" class="btn btn-danger" value="Submit "/>
+                        <input type="button"  v-on:click="checkUsername" class="btn btn-outline-light" value="Submit "/>
                     </form>
                </div>
                <footer class="footer">
@@ -165,31 +172,31 @@ font-family: 'Roboto';
             </div>
 
             <div v-if="logged" class="row mt-5">
-                <div id="user-list" class="h-100 overflow-auto col-md-3 bg-warning  rounded ">
-                    <h3 class="h3 mt-1"> Online Users</h3>
+                <div id="user-list" class="h-100 overflow-auto col-md-3   rounded ">
+                    <h3 class="h3 mt-1 pt-2 text-light " style="font-family: 'Montserrat';"> Online Users</h3>
                     <hr>
                     <ul>
                        
-                        <li v-for="user in users" class="p-1 text-success">
-                            {{user.username}}
+                        <li v-for="user in users" v-if="user.id>-1" class="p-1 text-light">
                             
-                            <strong class="text-danger" v-if="user.status==0"> OFFLINE</strong>
+                            
+                            {{user.username}}
                             
                         </li>
                     </ul>
                 </div>
                 <div class="col-md-1 "></div>
 
-                <div class="col-md-5 container-fluid">
-                    <div class="table-light text-danger rounded mb-5">Welcome {{username}}!</div>
-                   <div id="chatBox" class="row  h-100 overflow-auto container-fluid pt-2 bg-light rounded ">
+                <div class="col-md-5 p-0 container-fluid">
+                    
+                    <div class="table-light container-fluid py-3 text-dark rounded  mb-5">Welcome {{username}}!</div>
+                   
+                    <div id="chatBox" class="h-100 overflow-auto container-fluid pt-2 bg-light rounded">
                    
                     <hr>
-                    <div id="chat" class=" m-0 mb-5 container-fluid rounded chat">
-                        <div class="pl-2 "  v-for="msg in messagesArray">
+                    <div id="chat" class="mb-5 container-fluid rounded chat">
+                        <div class="pl-2 " v-for="msg in messagesArray">
                           <strong>{{msg.sender}}</strong>  {{msg.message}} <br>
-                          
-
                         </div>
                      
                     </div>
@@ -205,7 +212,7 @@ font-family: 'Roboto';
 
                             
                             <br>
-                            <input type="button" @click="sendMessage" class="btn btn-primary"  value="Send"/>
+                            <input type="button" @click="sendMessage" class="btn btn-outline-success"  value="Send"/>
                         </div>
                     </form>
                  </div>
@@ -231,7 +238,7 @@ font-family: 'Roboto';
                 
                     data:
                     {
-                        logged:false,
+                        logged:true,
                         duplicate:false,
                         username:"",
                         message:"",
@@ -317,6 +324,10 @@ font-family: 'Roboto';
                        socket.on('user fails',(data) =>{
                         this.logged=false;
 
+                       });
+
+                       socket.on('admin',(data) =>{
+                       this.username="admin"; 
                        });
 
                      

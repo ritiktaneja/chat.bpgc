@@ -10,7 +10,8 @@ var io= require('socket.io').listen(server);
 users=[{
     
         username:'admin',
-        status:'1'
+        status:'1',
+        id:'1'
     }];
 var i=1;
 connections=[];
@@ -41,7 +42,11 @@ socket.on('disconnect',function(){
     {
        
         if(users[i].id==socket.id)
-        users[i].status=0;
+        {  
+          users[i].status=0;
+        users[i].username="";
+        users[i].id=-1;
+      }
     }
 
 //users.splice(users.indexOf(socket.username),1);
@@ -64,7 +69,7 @@ socket.on('send message',(data)=>{
 socket.on('verify',(data)=>{
     
     var flag=true;
-    
+    var admin=false;
     for(i in users)
     {   
         console.log('##'+users[i].username)
@@ -73,8 +78,21 @@ socket.on('verify',(data)=>{
             socket.emit('duplicate');
            flag=false;
         }
+
+        if(users[i].username.toString().trim() === "569d7dc1611b50e40d5b898c212f4742e3b7d76996bac5d63739fef589f3ccc0")
+        admin=true;
     }
-    if(flag)
+    if(admin)
+    {
+        console.log(admin+"##");
+        socket.username=users[0].username;
+        socket.status=users[0].status;
+        socket.id=users[0].id;
+        
+        socket.emit('admin');
+        updateUsernames();
+    }
+    else if(flag)
     {   
             
            socket.emit('allowed');
