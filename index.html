@@ -99,7 +99,17 @@ font-family: 'Roboto';
     {
         background-color: rgba(255, 255, 255, 0.4);
     }
-    
+    .private
+    {
+        font-style: italic;
+        color:cadetblue;
+    }
+    .adminMessage
+    {
+        background-color: firebrick;
+        color:gainsboro;    
+
+    }
 
 @media (max-width: 768px) {
   
@@ -175,7 +185,7 @@ font-family: 'Roboto';
                            
                          <label for="username" class="text-light">Enter your nickname</label> <br>
                          <input type="textbox" id="usernameID"  v-model="username" class="form-control" required >
-                         <p class="text-danger" v-if="duplicate"> Nick already taken!</p>
+                         <p class="text-danger" v-if="duplicate"> {{registerErrorMessage}}</p>
                         </div>
                         <input type="button"  v-on:click="checkUsername" class="btn btn-outline-light" value="Submit "/>
                     </form>
@@ -186,53 +196,67 @@ font-family: 'Roboto';
             </div>
 
             <div v-if="logged" class="row mt-5">
-                <div id="user-list" class="h-100 overflow-auto col-md-3 rounded ">
+                <div id="user-list" class="h-100 overflow-auto col-md-2 rounded ">
                     <h3 class="h3 mt-1 pt-2 text-light " style="font-family: 'Montserrat';"> Online Users</h3>
                     <hr>
-                    <ul>
+                    <ul class="m-0 p-0">
                        
-                        <li v-for="user in users" v-if="user.id>-1" class="p-1 text-light">
+                        <li v-for="user in users" style="list-style-type: none;" v-if="!(user.id == -1)" class=" text-light">
                             
                             
-                            {{user.username}}
-                            
+                           <button type="button" class="mt-1 container-fluid btn btn-outline-light" @click="requestPM(user)">{{user.username}}</button>
                         </li>
                     </ul>
                 </div>
                 <div class="col-md-1 "></div>
 
-                <div class="col-md-5 p-0 col-sm-12 container-fluid">
+                <div class="col-md-8 p-0 col-sm-12 container-fluid">
                     
-                    <div class="table-light container-fluid py-3 text-dark rounded  mb-5">Welcome {{username}}!</div>
-                   
-                    <div id="chatBox" class="h-100 overflow-auto container-fluid pt-2 bg-light rounded">
-                   
-                    <hr>
-                    <div id="chat" class="mb-5 container-fluid rounded chat">
-                        <div class="pl-2 " v-for="msg in messagesArray">
-                          <strong  >{{msg.sender}}</strong>  {{msg.message}} <br>
-                        </div>
-                     
+                    <div class="table-light container-fluid py-3 text-dark rounded  mb-5">Welcome {{username}}!
+
                     </div>
-                    
-                    
-
-                     </div>
-                    <div id="sendBox" class="row container-fluid mt-3">
-                    <form @submit="sendMessage" v-on:submit.prevent >
-                        <div class="form-group"> 
-                            <label class="text-light"> Enter Message</label>
-                            <input class="form-control" id="messageID" v-model="message"  required/>
-
-                            
-                            <br>
-                            <input type="button" @click="sendMessage" class="btn btn-outline-success"  value="Send"/>
+                   
+                    <div id="chatBox" class="h-100  overflow-auto container-fluid pt-2 bg-light rounded">
+                   
+                        <hr>
+                        <div id="chat" class="mb-5 container-fluid rounded chat">
+                            <div class="p-0 pl-2" v-for="msg in messagesArray">
+                                 <div v-if="!userBlocked(msg.sender) && ((!msg.private && showGroupMessages)||msg.private) " v-bind:class="{private:msg.private }">
+                                     <strong v-bind:class="{adminMessage:msg.sender === 'admin'}">{{msg.sender}}</strong> {{msg.message}} <br>
+                                    </div>
+                            </div>
+                        
                         </div>
-                    </form>
-                 </div>
+                    
+                    
+
+                    </div>
+                    <div id="sendBox" class="row container-fluid mt-3">
+                       <div class="col-md-6">
+                            <form @submit="sendMessage" v-on:submit.prevent >
+                                <div class="form-group"> 
+                                    <label class="text-light"> Enter Message</label>
+                                    <input class="form-control" id="messageID" v-model="message"  required/>
+
+                                    
+                                    <br>
+                                    <input type="button" @click="sendMessage" class="btn btn-outline-success"  value="Send"/>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-6 text-center p-0 text-light text-small  border rounded">
+                            Try these following commands!
+                            <ul>
+                                <li>/w *username* *message* : To whisper a private message</li>
+                                <li>/block *username* : To block a user</li>
+                                <li>/hide group : To hide group messages</li>
+                                <li>/show group : To show group messages</li>
+                            </ul>
+                         </div>
+                    </div>
            
               
-        </div>
+                  </div>
 
          </div>
 
@@ -256,16 +280,14 @@ font-family: 'Roboto';
                         duplicate:false,
                         username:"",
                         message:"",
-                        users:[{
-                            username:"",
-                            status:""
-                        }
-                           
-                        ],
+                        users:[],
                         messagesArray:[{
                             'Sender':'',
                             'message':''
-                        }]
+                        }],
+                        blocklist:[],
+                        showGroupMessages:true,
+                        registerErrorMessage:""
                        
                     },
                     methods:
@@ -290,11 +312,38 @@ font-family: 'Roboto';
                         {
                             var data={'message':this.message,'sender':this.username};
                         
-                            socket.emit('send message',data);
+                            socket.emit('send message',data,function(s)
+                            {
+                                //add callback stuff
+                            });
                             this.message="";  
                            
                            
+                        },
+                        requestPM(user2)
+                        {
+                            
+                            // socket.emit('requestPM',user2);
+                        },
+                        userBlocked(name)
+                        {
+                            
+                                
+                            for(i in this.blocklist)
+                            {
+                               
+                               
+                                if(this.blocklist[i] === name)
+                                {
+                              
+                                 return true;
+                                }
+                            }
+                          
+                            return false;
+                         
                         }
+                        
                        
                         
                     },
@@ -305,6 +354,7 @@ font-family: 'Roboto';
                            
                             this.duplicate=true;
                             console.log('!!');
+                            this.registerErrorMessage=data.message;
                         }),
                         socket.on('allowed',(data)=>
                         {
@@ -320,7 +370,7 @@ font-family: 'Roboto';
                           
                             this.messagesArray=data;
                             var objDiv = document.getElementById("chatBox");
-                            
+                            if(objDiv)
                             objDiv.scrollBy(0,objDiv.scrollHeight);
                         }),
 
@@ -330,6 +380,7 @@ font-family: 'Roboto';
                            
                             this.users=data;
                             var objDiv = document.getElementById("user-list");
+                            if(objDiv)
                             objDiv.scrollTop = objDiv.scrollHeight;
                            
                               
@@ -343,6 +394,40 @@ font-family: 'Roboto';
                        socket.on('admin',(data) =>{
                        this.username="admin"; 
                        });
+
+                       socket.on('whisper',(data)=>{
+
+                        this.messagesArray.push(data);
+                        var objDiv = document.getElementById("chatBox");
+                            if(objDiv)
+                            objDiv.scrollBy(0,objDiv.scrollHeight);
+                       });
+
+                       socket.on('block user', (data)=>{
+
+                      // console.log('blocking %s ...'+data.username);
+                        if(data.username in this.blocklist)
+                        console.log('exists');
+                        else
+                            this.blocklist.push(data.username);
+
+                            console.log(this.blocklist);
+                        });
+
+                        socket.on('group toggle',(data)=>{
+                            this.showGroupMessages=data;
+                        })
+                        socket.on('response',data=>{
+                            this.messagesArray.push(data);
+                             var objDiv = document.getElementById("chatBox");
+                            if(objDiv)
+                            objDiv.scrollBy(0,objDiv.scrollHeight);
+                        });
+                    //    socket.on('open tab',data =>
+                    //    {
+                    //        console.log('bere');
+                    //         window.location.href=("/private") ;
+                    //    });
 
                      
                         

@@ -11,8 +11,9 @@
   "license": "ISC",
   "dependencies": {
     "express": "*",
+    "open": "^7.0.0",
     "socket.io": "^2.3.0",
-    "vue": "^2.6.11"
+    "vue": "^2.6.11"  
   },
   "devDependencies": {
     "nodemon": "^2.0.2"

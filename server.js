@@ -13,19 +13,24 @@ users=[{
         status:'1',
         id:'1'
     }];
-var i=1;
 connections=[];
 messagesArray=[{
     'Sender':'',
-    'message':''
+    'message':'',
+    'private':false
 }];
 
-server.listen(process.env.PORT || 8001);
+server.listen(process.env.PORT || 8999);
 
 console.log('Server running...');
 app.get('/',function(req,res){
 res.sendFile(__dirname+'/index.html');
 
+});
+
+app.get('/private',function(req,res)
+{
+   res.sendFile(__dirname+'/private.html'); 
 });
 
 
@@ -58,11 +63,108 @@ console.log('Disconnected: %s sockets connected',connections.length);
 });
 
 //Send Message
-socket.on('send message',(data)=>{
+socket.on('send message',(data,callback)=>{
+    data.message=data.message.trim();
+    
+    if(data.message.substr(0,3) === '/w ')
+    {
+        data.message=data.message.substr(3);
+        
+        var ind = data.message.indexOf(' ');
+        if(ind !== -1)
+        {
+            var name=data.message.substring(0,ind);
+            data.message=data.message.substring(ind+1);
+            console.log("PM USER 2: "+name);
+            var checkuser=true;
+            for( i in users)
+            {
+                if(name === users[i].username)
+                {
+                    data.private=true;
+                
+                    io.to(socket.id).emit('whisper',data);
+                    io.to(users[i].id).emit('whisper',data);
+                    
+                    console.log('Whisper');
+                    checkuser=false;
+                    break;
+                }
+               
+            }
+            if(checkuser)
+            {
+                callback('Enter a valid user name');
+                socket.emit('response',{'sender':'admin','private':true,'error':false,'message':'No such user exist!'});
+               
+                console.log('user unavailable');
+            }
 
+        }
+        else{
+                socket.emit('response',{'sender':'admin','private':true,'error':false,'message':'Please Enter a message for your whisper'});
+            callback('Error! Please Enter a message for your whisper');
+        }
+    }
+    else if(data.message.substr(0,7) === '/block ')
+    {
+        data.message=data.message.substr(7);
+        
+       
+            var name=data.message;
+            
+           if(name === socket.username)
+           {
+               callback('Don\'t block yourself');
+           }
+           else
+           {
+                var checkuser=true;
+                for( i in users)
+                {
+                    if(name === users[i].username)
+                    {
+                        console.log(name+' blocked by '+socket.username);
+                        socket.emit('block user',users[i])
+                        checkuser=false;
+                        socket.emit('response',{'sender':'admin','private':true,'error':false,'message':name+' blocked'});
+                    }
+                
+                }
+                if(checkuser)
+                {
+                    socket.emit('response',{'sender':'admin','private':true,'error':false,'message':'No such active user exist!'});
+                    callback('Enter a valid user name');
+                }
+            }
+
+        
+       
+    }
+
+    else if(data.message.substr(0,11) === '/hide group')
+    {
+       
+        socket.emit('group toggle',false);  
+        socket.emit('response',{'sender':'admin','private':true,'error':false,'message':'Group messages hidden'});
+    }
+    else if(data.message.substr(0,11) === '/show group')
+    {
+       
+        socket.emit('group toggle',true);  
+        socket.emit('response',{'sender':'admin','private':true,'error':false,'message':'Group messages Shown'});
+    }
+
+    
+
+    
+
+    else
+    {
+    data.private=false;
     messagesArray.push(data);
-   
     io.sockets.emit('new message',messagesArray);
+    }
   
 });
 
@@ -72,10 +174,10 @@ socket.on('verify',(data)=>{
     var admin=false;
     for(i in users)
     {   
-        console.log('##'+users[i].username)
+        console.log(users[i].username)
         if(users[i].username.toString().trim() === data.toString().trim())
         {
-            socket.emit('duplicate');
+            socket.emit('duplicate',{'message':'Nick Already exists!'});
            flag=false;
         }
 
@@ -106,11 +208,11 @@ socket.on('new user',(data,callback)=>{
     if(callback)
     callback(true);
    
-    data.id=i++;
+    
 
     socket.username=data.username;
     socket.status=data.status;
-    socket.id=data.id;
+    data.id=socket.id;
     
     users.push(data);
     console.log(data);
@@ -123,6 +225,18 @@ socket.on('get chat',(data)=>{
     io.sockets.emit('new message',messagesArray);  
 
 });
+// socket.on('requestPM',(user2)=>
+// {
+//     console.log("USER2 id : ",user2.id);
+//     var uniqueid=socket.id+user2.id.toString().trim();
+//     socket.join(uniqueid);
+//     socket.emit('open tab',uniqueid);
+   
+//     socket.broadcast.to(uniqueid).emit('private message','blah');
+   
+    
+    
+// });
 
     function updateUsernames()
     {
