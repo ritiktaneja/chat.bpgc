@@ -183,11 +183,11 @@ socket.on('verify',(data)=>{
            flag=false;
         }
         var ip = socket.handshake.address;
-        if(users[i].ip.toString().trim() === ip.toString().trim())
-        {
-           socket.emit('duplicate',{'message': 'ChatApp is already open in another tab or browser!'});
-           flag=false;
-        }
+        // if(users[i].ip.toString().trim() === ip.toString().trim())
+        // {
+        //    socket.emit('duplicate',{'message': 'ChatApp is already open in another tab or browser!'});
+        //    flag=false;
+        // }
 
 
         //if(users[i].username.toString().trim() === "569d7dc1611b50e40d5b898c212f4742e3b7d76996bac5d63739fef589f3ccc0")
