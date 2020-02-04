@@ -201,7 +201,7 @@ font-family: 'Roboto';
                     <hr>
                     <ul class="m-0 p-0">
                        
-                        <li v-for="user in users" style="list-style-type: none;" v-if="!(user.id == -1)" class=" text-light">
+                        <li v-for="user in users" style="list-style-type: none;" v-if="!(user.id == -1) && user.username !== username" class=" text-light">
                             
                             
                            <button type="button" class="mt-1 container-fluid btn btn-outline-light" @click="requestPM(user)">{{user.username}}</button>
