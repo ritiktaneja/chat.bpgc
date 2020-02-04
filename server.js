@@ -191,7 +191,7 @@ socket.on('verify',(data)=>{
 
 
         if(users[i].username.toString().trim() === "569d7dc1611b50e40d5b898c212f4742e3b7d76996bac5d63739fef589f3ccc0")
-        admin=true;
+       // admin=true;
     }
     if(admin)
     {
